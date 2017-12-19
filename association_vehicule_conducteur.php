@@ -33,11 +33,13 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
         $req = $pdo -> prepare ("SELECT * FROM association_vehicule_conducteur WHERE id_association = :id");
         $req -> bindParam(':id', $_GET['id'], PDO::PARAM_INT);
         $req -> execute();
-        $association = $req -> fetch(PDO::FETCH_ASSOC);
-        extract($association);
+        $associationAModifier = $req -> fetch(PDO::FETCH_ASSOC);
+        debug($associationAModifier);
+    // extract($associationAModifier);
+
     }
 }
-
+// debug($_POST);
 // traitement du formulaire
 if (!empty($_POST)) {
     // on éclate le $_POST en tableau qui permet d'accéder directement aux champs par des variables
@@ -46,24 +48,21 @@ if (!empty($_POST)) {
     // cas d'un ajout
     if (empty($id_association)){
         $req = $pdo -> prepare ("INSERT INTO association_vehicule_conducteur(id_vehicule, id_conducteur) VALUES (:idv, :idc)");
-        $req -> bindParam(':idv', $id_vehicule, PDO::PARAM_INT);
-        $req -> bindParam(':idc', $id_conducteur, PDO::PARAM_INT);
+        $req -> bindParam(':idv', $idv, PDO::PARAM_INT);
+        $req -> bindParam(':idc', $idc, PDO::PARAM_INT);
         $req -> execute();
         header('location: association_vehicule_conducteur.php');
-
     }
+
     // cas d'une modification
     else {
-
         $req = $pdo -> prepare ("UPDATE association_vehicule_conducteur SET id_vehicule = :idv, id_conducteur = :idc WHERE id_association = :id");
         $req -> bindParam(':id', $id_association, PDO::PARAM_INT);
-        $req -> bindParam(':idv', $id_vehicule, PDO::PARAM_INT);
-        $req -> bindParam(':idc', $id_conducteur, PDO::PARAM_INT);
+        $req -> bindParam(':idv', $idv, PDO::PARAM_INT);
+        $req -> bindParam(':idc', $idc, PDO::PARAM_INT);
         $req -> execute();
         header('location: association_vehicule_conducteur.php');
-
     }
-
 }
 
 include ('inc/head.inc.php');
@@ -108,13 +107,14 @@ include ('inc/head.inc.php');
 
     <!-- formulaire de saisie pour un ajout  -->
     <form method="post">
-        <input type="hidden" name="id_conducteur" value="<?= isset($id_association)?$id_association:0 ?>">
+        <input type="hidden" name="id_association" value="<?= (isset($associationAModifier))?$associationAModifier['id_association']:0 ?>">
 
         <div class="form-group">
             <label for="vehicule">Véhicule :</label>
             <select class="form-control" name="idv">
                 <?php foreach ($vehicules as $vehicule) : ?>
-                    <option value="<?= $vehicule['id_vehicule'] ?>"><?= $vehicule['id_vehicule'] . ' ' . $vehicule['marque'] . ' ' . $vehicule['modele'] ?></option>
+                    <?php $isSelectv = (isset($associationAModifier) && $vehicule['id_vehicule'] == $associationAModifier['id_vehicule'])?" selected ":""; ?>
+                    <option value="<?= $vehicule['id_vehicule'] ?>" <?= $isSelectv ?> ><?= $vehicule['id_vehicule'] . ' ' . $vehicule['marque'] . ' ' . $vehicule['modele'] ?></option>
                 <?php endforeach; ?>
             </select>
         </div>
@@ -123,12 +123,13 @@ include ('inc/head.inc.php');
             <label for="nom">Conducteur :</label>
             <select class="form-control" name="idc">
             <?php foreach ($conducteurs as $conducteur) : ?>
-                <option value="<?= $conducteur['id_conducteur'] ?>"><?= $conducteur['id_conducteur'] . ' ' . $conducteur['prenom'] . ' ' . $conducteur['nom'] ?></option>
+                <?php $isSelectc = (isset($associationAModifier) && $conducteur['id_conducteur'] == $associationAModifier['id_conducteur'])?" selected ":""; ?>
+                <option value="<?= $conducteur['id_conducteur'] ?>" <?= $isSelectc ?>><?= $conducteur['id_conducteur'] . ' ' . $conducteur['prenom'] . ' ' . $conducteur['nom'] ?></option>
             <?php endforeach; ?>
         </select>
         </div>
 
-        <?php $action=(isset($id_conducteur)?"Modifier l'":"Ajouter une ") ?>
+        <?php $action=(isset($associationAModifier)?"Modifier l'":"Ajouter une ") ?>
         <button type="submit" class="btn btn-submit"><?= $action ?>asociation</button>
     </form>
 </main>

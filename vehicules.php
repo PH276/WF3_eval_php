@@ -41,7 +41,7 @@ if (!empty($_POST)) {
     // cas d'un ajout
     if (empty($id_vehicule)){
         if (!empty($marque) && !empty($modele) && !empty($couleur) && !empty($immatriculation)){
-            $req = $pdo -> prepare ("INSERT INTO conducteur(prenom, nom) VALUES (:prenom, :nom)");
+            $req = $pdo -> prepare ("INSERT INTO vehicule(marque, modele, couleur, immatriculation) VALUES (:marque, :modele, :couleur, :immatriculation)");
             $req -> bindParam(':marque', $marque, PDO::PARAM_STR);
             $req -> bindParam(':modele', $modele, PDO::PARAM_STR);
             $req -> bindParam(':couleur', $couleur, PDO::PARAM_STR);
@@ -60,7 +60,7 @@ if (!empty($_POST)) {
     else {
         if (!empty($marque) && !empty($modele) && !empty($couleur) && !empty($immatriculation)){
 
-            $req = $pdo -> prepare ("UPDATE vehicule SET prenom = :prenom, nom = :nom WHERE id_vehicule = :id");
+            $req = $pdo -> prepare ("UPDATE vehicule SET marque = :marque, modele = :modele, couleur = :couleur, immatriculation = :immatriculation WHERE id_vehicule = :id");
             $req -> bindParam(':id', $id_vehicule, PDO::PARAM_INT);
             $req -> bindParam(':marque', $marque, PDO::PARAM_STR);
             $req -> bindParam(':modele', $modele, PDO::PARAM_STR);
