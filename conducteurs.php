@@ -1,9 +1,16 @@
 <?php
 include ('inc/init.inc.php');
-$req = $pdo -> query ("SELECT * FROM conducteur");
+
+if (isset($_GET['sans-vehicule'])){
+    // cas de  la demande de conducteurs sans véhicule
+    $requete = "SELECT * FROM conducteur WHERE id_conducteur NOT IN (SELECT id_conducteur FROM association_vehicule_conducteur)";
+} else{
+    $requete = "SELECT * FROM conducteur";
+}
+
+$req = $pdo -> query ($requete);
 $conducteurs = $req -> fetchAll(PDO::FETCH_ASSOC);
 $nb = $req -> rowCount();
-
 
 // initilistion de message d'erreur
 $erreurprenom = '';
@@ -71,7 +78,11 @@ if (!empty($_POST)) {
 include ('inc/head.inc.php');
 ?>
 <main class="container">
-    <h1 class="text-center">Liste des <?= $nb ?> conducteurs</h1>
+    <a href="?sans-vehicule=1">
+        <button  class="btn btn-info">sans véhicule</button>
+    </a>
+
+    <h1 class="text-center">Liste des <?= $nb ?> conducteurs <?= (isset($_GET['sans-vehicule']))?" sans véhicule":""; ?></h1>
 
     <!-- Affichage de la Liste des conducteurs -->
     <table class="table table-striped">
@@ -81,6 +92,7 @@ include ('inc/head.inc.php');
             <th>Nom</th>
             <th class="text-center">Modification</th>
             <th class="text-center">Suppression</th>
+            <th></th>
         </tr>
 
         <?php foreach ($conducteurs as $conducteur) : ?>
@@ -102,6 +114,12 @@ include ('inc/head.inc.php');
                             <span class="glyphicon glyphicon-trash" aria-hidden="true"></span>
                         </button>
                     </a>
+                </td>
+                <td class="text-center">
+                    <a href="vehicules.php?id=<?= $conducteur['id_conducteur'] ?>">
+                        <button  class="btn btn-info">Ses véhicules</button>
+                    </a>
+
                 </td>
             </tr>
         <?php endforeach; ?>

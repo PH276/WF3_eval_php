@@ -1,6 +1,22 @@
 <?php
 include ('inc/init.inc.php');
-$req = $pdo -> query ("SELECT * FROM vehicule");
+if (isset($_GET['id'])){
+    $requete = "SELECT a.id_vehicule, marque, modele, couleur, immatriculation, prenom, nom
+    FROM association_vehicule_conducteur as a
+    INNER JOIN conducteur as c ON a.id_conducteur=c.id_conducteur
+    INNER JOIN vehicule as v ON a.id_vehicule=v.id_vehicule
+    WHERE a.id_conducteur = :id";
+$req = $pdo -> prepare($requete);
+$req -> bindParam(':id', $_GET['id'], PDO::PARAM_INT);
+$req -> execute();
+} elseif (isset($_GET['sans-conducteur'])){
+    $requete = "SELECT * FROM vehicule WHERE id_vehicule NOT IN (SELECT id_vehicule FROM association_vehicule_conducteur)";
+    $req = $pdo -> query ($requete);
+} else{
+    $requete = "SELECT * FROM vehicule";
+    $req = $pdo -> query ($requete);
+
+}
 $vehicules = $req -> fetchAll(PDO::FETCH_ASSOC);
 $nb = $req -> rowCount();
 
@@ -32,7 +48,6 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
         extract($vehicule);
     }
 }
-debug($_POST);
 // traitement du formulaire
 if (!empty($_POST)) {
     // on éclate le $_POST en tableau qui permet d'accéder directement aux champs par des variables
@@ -81,7 +96,16 @@ if (!empty($_POST)) {
 include ('inc/head.inc.php');
 ?>
 <main class="container">
-    <h1 class="text-center">Liste des <?= $nb ?> véhicules</h1>
+    <a href="?tous=1">
+        <button  class="btn btn-info">Tous</button>
+    </a>
+    <a href="?sans-conducteur=1">
+        <button  class="btn btn-info">sans conducteur</button>
+    </a>
+
+
+    <h1 class="text-center">Liste des <?= $nb ?> véhicules <?= (isset($_GET['sans-conducteur']))?
+    " sans conducteur":((isset($_GET['id']))?" conduits par " . $vehicules[0]['prenom'] . ' ' . $vehicules[0]['nom']:""); ?></h1>
 
     <!-- Affichage de la Liste des conducteurs -->
     <table class="table table-striped">

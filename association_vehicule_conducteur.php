@@ -1,10 +1,44 @@
 <?php
 include ('inc/init.inc.php');
-$requete = "SELECT id_association, prenom, nom, a.id_conducteur idc, marque, modele, a.id_vehicule idv
-FROM association_vehicule_conducteur as a
-INNER JOIN conducteur as c ON c.id_conducteur=a.id_conducteur
-INNER JOIN vehicule as v ON v.id_vehicule=a.id_vehicule
-";
+if (isset($_GET['tout'])){
+    $requete = "(SELECT id_association, prenom, nom, a.id_conducteur idc, marque, modele, a.id_vehicule idv
+    FROM conducteur as c
+    LEFT JOIN association_vehicule_conducteur as a on c.id_conducteur=a.id_conducteur
+    LEFT JOIN vehicule as v ON a.id_vehicule=v.id_vehicule)
+    UNION(
+    SELECT id_association, prenom, nom, a.id_conducteur idc, marque, modele, a.id_vehicule idv
+    FROM vehicule as v
+    LEFT JOIN association_vehicule_conducteur as a on v.id_vehicule=a.id_vehicule
+    LEFT JOIN conducteur as c ON a.id_conducteur=c.id_conducteur)";
+    $titreAffiche = " lignes de conducteurs et véhicules";
+}
+elseif (isset($_GET['conducteurs']))
+{
+    $requete = "SELECT id_association, prenom, nom, a.id_conducteur idc, marque, modele, a.id_vehicule idv
+    FROM conducteur as c
+    LEFT JOIN association_vehicule_conducteur as a on c.id_conducteur=a.id_conducteur
+    LEFT JOIN vehicule as v ON a.id_vehicule=v.id_vehicule";
+    $titreAffiche = " lignes de conducteurs avec ou sans véhicule";
+} elseif (isset($_GET['vehicules']))
+{
+    $requete = "SELECT id_association, prenom, nom, a.id_conducteur idc, marque, modele, a.id_vehicule idv
+    FROM vehicule as v
+    LEFT JOIN association_vehicule_conducteur as a on v.id_vehicule=a.id_vehicule
+    LEFT JOIN conducteur as c ON a.id_conducteur=c.id_conducteur";
+    $titreAffiche = " lignes de véhicules avec ou sans conducteur";
+} else
+{
+    $requete = "SELECT id_association, prenom, nom, a.id_conducteur idc, marque, modele, a.id_vehicule idv
+    FROM association_vehicule_conducteur as a
+    INNER JOIN conducteur as c ON c.id_conducteur=a.id_conducteur
+    INNER JOIN vehicule as v ON v.id_vehicule=a.id_vehicule";
+
+
+
+    // $requete = "SELECT prenom, nom, marque, modele FROM association_vehicule_conducteur conducteur as c, vehicule as v ";
+
+    $titreAffiche = " associations";
+}
 $req = $pdo -> query ($requete);
 $associations = $req -> fetchAll(PDO::FETCH_ASSOC);
 $nb = $req -> rowCount();
@@ -15,7 +49,6 @@ $vehicules = $req -> fetchAll(PDO::FETCH_ASSOC);
 
 $req = $pdo -> query ("SELECT * FROM conducteur");
 $conducteurs = $req -> fetchAll(PDO::FETCH_ASSOC);
-// initilistion de message d'erreur
 
 // traitement d'une demande de suppresion ou de modification
 if (isset($_GET['action']) && isset($_GET['id'])) {
@@ -34,12 +67,10 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
         $req -> bindParam(':id', $_GET['id'], PDO::PARAM_INT);
         $req -> execute();
         $associationAModifier = $req -> fetch(PDO::FETCH_ASSOC);
-        debug($associationAModifier);
-    // extract($associationAModifier);
+        // extract($associationAModifier);
 
     }
 }
-// debug($_POST);
 // traitement du formulaire
 if (!empty($_POST)) {
     // on éclate le $_POST en tableau qui permet d'accéder directement aux champs par des variables
@@ -68,14 +99,26 @@ if (!empty($_POST)) {
 include ('inc/head.inc.php');
 ?>
 <main class="container">
-    <h1 class="text-center">Liste des <?= $nb ?> associations</h1>
+    <a href="?conducteurs=1">
+        <button  class="btn btn-info">Avec tous les conducteurs</button>
+    </a>
+
+    <a href="?vehicules=1">
+        <button  class="btn btn-info">Avec tous les véhicules</button>
+    </a>
+
+    <a href="?tout=1">
+        <button  class="btn btn-info">Avec tous les conducteurs et véhicules</button>
+    </a>
+
+    <h1 class="text-center">Liste des <?= $nb . $titreAffiche ?></h1>
 
     <!-- Affichage de la Liste des conducteurs -->
     <table class="table table-striped">
         <tr>
             <th>id_association</th>
-            <th>Véhicule</th>
-            <th>Conducteur</th>
+            <th>Conducteurs</th>
+            <th>Véhicules</th>
             <th class="text-center">Modification</th>
             <th class="text-center">Suppression</th>
         </tr>
@@ -122,11 +165,11 @@ include ('inc/head.inc.php');
         <div class="form-group">
             <label for="nom">Conducteur :</label>
             <select class="form-control" name="idc">
-            <?php foreach ($conducteurs as $conducteur) : ?>
-                <?php $isSelectc = (isset($associationAModifier) && $conducteur['id_conducteur'] == $associationAModifier['id_conducteur'])?" selected ":""; ?>
-                <option value="<?= $conducteur['id_conducteur'] ?>" <?= $isSelectc ?>><?= $conducteur['id_conducteur'] . ' ' . $conducteur['prenom'] . ' ' . $conducteur['nom'] ?></option>
-            <?php endforeach; ?>
-        </select>
+                <?php foreach ($conducteurs as $conducteur) : ?>
+                    <?php $isSelectc = (isset($associationAModifier) && $conducteur['id_conducteur'] == $associationAModifier['id_conducteur'])?" selected ":""; ?>
+                    <option value="<?= $conducteur['id_conducteur'] ?>" <?= $isSelectc ?>><?= $conducteur['id_conducteur'] . ' ' . $conducteur['prenom'] . ' ' . $conducteur['nom'] ?></option>
+                <?php endforeach; ?>
+            </select>
         </div>
 
         <?php $action=(isset($associationAModifier)?"Modifier l'":"Ajouter une ") ?>
